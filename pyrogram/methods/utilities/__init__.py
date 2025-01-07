@@ -16,9 +16,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with Pyrogram.  If not, see <http://www.gnu.org/licenses/>.
 
-from .add_handler import AddHandler
 from .export_session_string import ExportSessionString
-from .remove_handler import RemoveHandler
 from .restart import Restart
 from .run import Run
 from .start import Start
@@ -27,9 +25,7 @@ from .stop_transmission import StopTransmission
 
 
 class Utilities(
-    AddHandler,
     ExportSessionString,
-    RemoveHandler,
     Restart,
     Run,
     Start,
