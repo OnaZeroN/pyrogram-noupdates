@@ -176,8 +176,6 @@ class Session:
                 await self.client.disconnect_handler(self.client)
             except Exception as e:
                 log.exception(e)
-        self.client.is_connected = False
-        self.loop.create_task(self.client.storage.close())
         log.info("Session stopped")
 
     async def restart(self):
@@ -195,7 +193,7 @@ class Session:
                 self.auth_key_id
             )
         except ValueError:
-            self.loop.create_task(self.stop())
+            await self.client.stop()
             return
 
         messages = (
@@ -291,7 +289,7 @@ class Session:
                     ), False
                 )
             except OSError:
-                self.loop.create_task(self.stop())
+                await self.client.stop()
                 break
             except RPCError:
                 pass
@@ -320,7 +318,7 @@ class Session:
                     )
 
                 if self.is_started.is_set():
-                    self.loop.create_task(self.stop())
+                    await self.client.stop()
 
                 break
 
