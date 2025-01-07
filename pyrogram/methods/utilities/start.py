@@ -70,4 +70,6 @@ class Start:
             await self.disconnect()
             raise
         else:
+            if not self.is_initialized:
+                await self.initialize()
             return self
