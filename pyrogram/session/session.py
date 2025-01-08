@@ -98,8 +98,6 @@ class Session:
 
         self.is_started = asyncio.Event()
 
-        self.loop = asyncio.get_event_loop()
-
     async def start(self):
         self.connection = self.client.connection_factory(
             dc_id=self.dc_id,
@@ -113,7 +111,7 @@ class Session:
         try:
             await self.connection.connect()
 
-            self.recv_task = self.loop.create_task(self.recv_worker())
+            self.recv_task = asyncio.create_task(self.recv_worker())
 
             await self.send(raw.functions.Ping(ping_id=0), timeout=self.START_TIMEOUT)
 
@@ -136,7 +134,7 @@ class Session:
                     timeout=self.START_TIMEOUT
                 )
 
-            self.ping_task = self.loop.create_task(self.ping_worker())
+            self.ping_task = asyncio.create_task(self.ping_worker())
 
             log.info("Session initialized: Layer %s", layer)
             log.info("Device: %s - %s", self.client.device_model, self.client.app_version)
@@ -184,8 +182,7 @@ class Session:
 
     async def handle_packet(self, packet):
         try:
-            data = await self.loop.run_in_executor(
-                pyrogram.crypto_executor,
+            data = await asyncio.to_thread(
                 mtproto.unpack,
                 BytesIO(packet),
                 self.session_id,
@@ -193,7 +190,7 @@ class Session:
                 self.auth_key_id
             )
         except ValueError:
-            await self.client.stop()
+            asyncio.create_task(self.client.stop())
             return
 
         messages = (
@@ -319,7 +316,7 @@ class Session:
 
                 break
 
-            self.loop.create_task(self.handle_packet(packet))
+            asyncio.create_task(self.handle_packet(packet))
 
         log.info("NetworkTask stopped")
 
@@ -332,8 +329,7 @@ class Session:
 
         log.debug("Sent: %s", message)
 
-        payload = await self.loop.run_in_executor(
-            pyrogram.crypto_executor,
+        payload = await asyncio.to_thread(
             mtproto.pack,
             message,
             self.salt,

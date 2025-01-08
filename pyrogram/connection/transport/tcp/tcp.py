@@ -90,10 +90,7 @@ class TCP:
         )
         sock.settimeout(TCP.TIMEOUT)
 
-        await self.loop.sock_connect(
-            sock=sock,
-            address=destination
-        )
+        await asyncio.to_thread(sock.connect, destination, None)
 
         sock.setblocking(False)
 

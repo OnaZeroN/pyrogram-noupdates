@@ -345,8 +345,6 @@ class Client(Methods):
 
         self.message_cache = Cache(self.max_message_cache_size)
 
-        self.loop = asyncio.get_event_loop()
-
     def __enter__(self):
         return self.start()
 
@@ -774,10 +772,7 @@ class Client(Methods):
                                 *progress_args
                             )
 
-                            if inspect.iscoroutinefunction(progress):
-                                await func()
-                            else:
-                                await self.loop.run_in_executor(self.executor, func)
+                            await self.acall(func)
 
                         if len(chunk) < chunk_size or current >= total:
                             break
@@ -862,10 +857,7 @@ class Client(Methods):
                                     *progress_args
                                 )
 
-                                if inspect.iscoroutinefunction(progress):
-                                    await func()
-                                else:
-                                    await self.loop.run_in_executor(self.executor, func)
+                                await self.acall(func)
 
                             if len(chunk) < chunk_size or current >= total:
                                 break
@@ -886,6 +878,14 @@ class Client(Methods):
     def guess_extension(self, mime_type: str) -> Optional[str]:
         return self.mimetypes.guess_extension(mime_type)
 
+    async def acall(self, func, *args, **kwargs):
+        """Calls func asynchronously if possible, otherwise wraps in executor"""
+        if inspect.iscoroutinefunction(func):
+            return await func(*args, **kwargs)
+        else:
+            return await asyncio.get_running_loop().run_in_executor(
+                self.executor, func, *args, **kwargs
+            )
 
 class Cache:
     def __init__(self, capacity: int):
