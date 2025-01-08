@@ -283,7 +283,7 @@ class Session:
                     ), False
                 )
             except OSError:
-                await self.client.stop()
+                asyncio.create_task(self.client.stop())
                 break
             except RPCError:
                 pass
@@ -312,7 +312,7 @@ class Session:
                     )
 
                 if self.is_started.is_set():
-                    await self.client.stop()
+                    asyncio.create_task(self.client.stop())
 
                 break
 
@@ -401,3 +401,4 @@ class Session:
                 query_name, str(e) or repr(e)
             )
             raise e from None
+
